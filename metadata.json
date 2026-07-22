@@ -1,0 +1,6 @@
+{
+  "name": "Lunaris",
+  "description": "Aplikasi Manajemen Inventaris dan Peminjaman Gudang untuk SMA Negeri 1 Bobotsari dengan sinkronisasi real-time Google Sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

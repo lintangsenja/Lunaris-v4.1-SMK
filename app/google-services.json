@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "48370294902",
+    "project_id": "lunaris-app-c6400",
+    "storage_bucket": "lunaris-app-c6400.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:48370294902:android:63d01244318c4fd8c3bf57",
+        "android_client_info": {
+          "package_name": "com.lintang.lunaris"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrAN62B3KDrpGQjIi-kVZ2TQWYpcsSt_w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
