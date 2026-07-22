@@ -36,6 +36,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.rotate
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.AssignmentReturn
@@ -1013,51 +1014,35 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        fun isMenuAllowedForSiswa(route: String): Boolean {
+        fun isMenuAllowedForSiswa(permissionKey: String): Boolean {
             if (userRole.contains("admin", ignoreCase = true)) return true
-            return when (route) {
-                "Scan QR" -> (studentPermissions["scan_qr"] == true) || (studentPermissions["generate_qr"] == true) || (studentPermissions["qr_group"] == true)
-                "Alat" -> (studentPermissions["alat"] == true) || (studentPermissions["alat_view"] == true) || (studentPermissions["alat_detail"] == true) || (studentPermissions["alat_import"] == true) || (studentPermissions["alat_export"] == true)
-                "Bahan" -> (studentPermissions["bahan"] == true) || (studentPermissions["bahan_view"] == true) || (studentPermissions["bahan_detail"] == true) || (studentPermissions["bahan_import"] == true) || (studentPermissions["bahan_export"] == true)
-                "Pemakaian Bahan" -> (studentPermissions["pemakaian_bahan"] == true) || (studentPermissions["pemakaian_bahan_form"] == true) || (studentPermissions["pemakaian_bahan_log"] == true)
-                "Bahan Afkir" -> (studentPermissions["bahan_afkir"] == true) || (studentPermissions["bahan_afkir_submit"] == true) || (studentPermissions["bahan_afkir_view"] == true)
-                "Alat Rusak" -> (studentPermissions["alat_rusak"] == true) || (studentPermissions["alat_rusak_submit"] == true) || (studentPermissions["alat_rusak_view"] == true)
-                "Pemeliharaan" -> (studentPermissions["pemeliharaan"] == true) || (studentPermissions["pemeliharaan_tambah"] == true) || (studentPermissions["pemeliharaan_view"] == true)
-                "Peminjaman" -> (studentPermissions["peminjaman"] == true) || (studentPermissions["peminjaman_form"] == true) || (studentPermissions["peminjaman_riwayat"] == true)
-                "Pengembalian" -> (studentPermissions["pengembalian"] == true) || (studentPermissions["pengembalian_normal"] == true) || (studentPermissions["pengembalian_parsial"] == true)
-                "Kondisi Alat" -> (studentPermissions["kondisi_alat"] == true) || (studentPermissions["kondisi_alat_catat"] == true) || (studentPermissions["kondisi_alat_view"] == true)
-                "Log Transaksi" -> (studentPermissions["log_transaksi"] == true) || (studentPermissions["log_sirkulasi"] == true) || (studentPermissions["log_bahan_habis"] == true) || (studentPermissions["log_stok"] == true) || (studentPermissions["log_pemeliharaan"] == true) || (studentPermissions["log_aktivitas"] == true)
-                "Master Data" -> (studentPermissions["master_data"] == true) || (studentPermissions["master_data_view"] == true) || (studentPermissions["master_data_manage"] == true)
-                "Stok Opname" -> (studentPermissions["stok_opname"] == true) || (studentPermissions["stok_opname_audit"] == true) || (studentPermissions["stok_opname_reconcile"] == true)
-                "Laporan" -> (studentPermissions["laporan"] == true) || (studentPermissions["laporan_ringkasan"] == true) || (studentPermissions["laporan_alat"] == true) || (studentPermissions["laporan_bahan"] == true) || (studentPermissions["laporan_afkir"] == true) || (studentPermissions["laporan_peminjaman"] == true) || (studentPermissions["laporan_pengembalian"] == true) || (studentPermissions["laporan_alat_rusak"] == true) || (studentPermissions["laporan_pemeliharaan"] == true) || (studentPermissions["laporan_export_excel"] == true) || (studentPermissions["laporan_print_pdf"] == true)
-                else -> true
-            }
+            return viewModel.isStudentPermissionAllowed(permissionKey)
         }
 
         val operasionalMenus = remember(userRole, studentPermissions) {
             listOf(
-                DashboardMenuData("ALAT", "Kelola & cek stok barang", Icons.Default.Build, Color(0xFF7C3AED), Color(0xFFF3E8FF), "menu_alat", "Alat"),
-                DashboardMenuData("BAHAN", "Stok barang habis pakai", Icons.Default.Science, Color(0xFF0284C7), Color(0xFFE0F2FE), "menu_bahan", "Bahan"),
-                DashboardMenuData("Pemakaian Bahan", "Pakai bahan habis pakai", Icons.Default.ShoppingCart, Color(0xFFDB2777), Color(0xFFFCE7F3), "menu_pemakaian_bahan", "Pemakaian Bahan"),
-                DashboardMenuData("Bahan Afkir", "Bahan rusak / kedaluwarsa", Icons.Default.DeleteSweep, Color(0xFFEA580C), Color(0xFFFFEDD5), "menu_bahan_afkir", "Bahan Afkir"),
-                DashboardMenuData("Alat Rusak", "Kelola & lapor alat rusak", Icons.Default.Warning, Color(0xFFEF4444), Color(0xFFFFECEF), "menu_alat_rusak", "Alat Rusak"),
-                DashboardMenuData("Pemeliharaan", "Servis & pemeliharaan alat", Icons.Default.Build, Color(0xFF2563EB), Color(0xFFEFF6FF), "menu_pemeliharaan", "Pemeliharaan")
-            ).filter { isMenuAllowedForSiswa(it.route) }
+                DashboardMenuData("ALAT", "Kelola & cek stok barang", Icons.Default.Build, Color(0xFF7C3AED), Color(0xFFF3E8FF), "menu_alat", "Alat", "alat"),
+                DashboardMenuData("BAHAN", "Stok barang habis pakai", Icons.Default.Science, Color(0xFF0284C7), Color(0xFFE0F2FE), "menu_bahan", "Bahan", "bahan"),
+                DashboardMenuData("Pemakaian Bahan", "Pakai bahan habis pakai", Icons.Default.ShoppingCart, Color(0xFFDB2777), Color(0xFFFCE7F3), "menu_pemakaian_bahan", "Pemakaian Bahan", "pemakaian_bahan"),
+                DashboardMenuData("Bahan Afkir", "Bahan rusak / kedaluwarsa", Icons.Default.DeleteSweep, Color(0xFFEA580C), Color(0xFFFFEDD5), "menu_bahan_afkir", "Bahan Afkir", "bahan_afkir"),
+                DashboardMenuData("Alat Rusak", "Kelola & lapor alat rusak", Icons.Default.Warning, Color(0xFFEF4444), Color(0xFFFFECEF), "menu_alat_rusak", "Alat Rusak", "alat_rusak"),
+                DashboardMenuData("Pemeliharaan", "Servis & pemeliharaan alat", Icons.Default.Build, Color(0xFF2563EB), Color(0xFFEFF6FF), "menu_pemeliharaan", "Pemeliharaan", "pemeliharaan")
+            )
         }
 
         val sirkulasiMenus = remember(userRole, studentPermissions) {
             listOf(
-                DashboardMenuData("Peminjaman Alat", "Input barang keluar", Icons.Default.Assignment, Color(0xFF059669), Color(0xFFD1FAE5), "menu_peminjaman", "Peminjaman"),
-                DashboardMenuData("Pengembalian Alat", "Input barang kembali", Icons.Default.AssignmentReturn, Color(0xFF4F46E5), Color(0xFFE0E7FF), "menu_pengembalian", "Pengembalian"),
-                DashboardMenuData("Kondisi Alat", "Cek kelayakan alat", Icons.Default.Info, Color(0xFFE11D48), Color(0xFFFFE4E6), "menu_kondisi_alat", "Kondisi Alat"),
-                DashboardMenuData("Log Transaksi", "Riwayat aktivitas", Icons.Default.CloudSync, Color(0xFF0D9488), Color(0xFFCCFBF1), "menu_log_transaksi", "Log Transaksi")
-            ).filter { isMenuAllowedForSiswa(it.route) }
+                DashboardMenuData("Peminjaman Alat", "Input barang keluar", Icons.Default.Assignment, Color(0xFF059669), Color(0xFFD1FAE5), "menu_peminjaman", "Peminjaman", "peminjaman"),
+                DashboardMenuData("Pengembalian Alat", "Input barang kembali", Icons.Default.AssignmentReturn, Color(0xFF4F46E5), Color(0xFFE0E7FF), "menu_pengembalian", "Pengembalian", "pengembalian"),
+                DashboardMenuData("Kondisi Alat", "Cek kelayakan alat", Icons.Default.Info, Color(0xFFE11D48), Color(0xFFFFE4E6), "menu_kondisi_alat", "Kondisi Alat", "kondisi_alat"),
+                DashboardMenuData("Log Transaksi", "Riwayat aktivitas", Icons.Default.CloudSync, Color(0xFF0D9488), Color(0xFFCCFBF1), "menu_log_transaksi", "Log Transaksi", "log_transaksi")
+            )
         }
 
         val analisisMenus = remember(userRole, studentPermissions) {
             listOf(
-                DashboardMenuData("Laporan", "Unduh laporan & rekapan", Icons.Default.Assessment, Color(0xFF06B6D4), Color(0xFFECFEFF), "menu_laporan", "Laporan")
-            ).filter { isMenuAllowedForSiswa(it.route) }
+                DashboardMenuData("Laporan", "Unduh laporan & rekapan", Icons.Default.Assessment, Color(0xFF06B6D4), Color(0xFFECFEFF), "menu_laporan", "Laporan", "laporan")
+            )
         }
 
         // 1. KELOMPOK OPERASIONAL (EXPANDABLE)
@@ -1081,6 +1066,7 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             rowItems.forEach { item ->
+                                val allowed = isMenuAllowedForSiswa(item.permissionKey)
                                 GlassMenuCard(
                                     title = item.title,
                                     subtitle = item.subtitle,
@@ -1089,7 +1075,8 @@ fun DashboardScreen(
                                     boxBgColor = item.boxBgColor,
                                     testTag = item.testTag,
                                     onClick = { onNavigateToMenu(item.route) },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    isLocked = !allowed
                                 )
                             }
                         }
@@ -1122,6 +1109,7 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             rowItems.forEach { item ->
+                                val allowed = isMenuAllowedForSiswa(item.permissionKey)
                                 GlassMenuCard(
                                     title = item.title,
                                     subtitle = item.subtitle,
@@ -1130,7 +1118,8 @@ fun DashboardScreen(
                                     boxBgColor = item.boxBgColor,
                                     testTag = item.testTag,
                                     onClick = { onNavigateToMenu(item.route) },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    isLocked = !allowed
                                 )
                             }
                         }
@@ -1157,6 +1146,7 @@ fun DashboardScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     analisisMenus.forEach { item ->
+                        val allowed = isMenuAllowedForSiswa(item.permissionKey)
                         GlassMenuCard(
                             title = item.title,
                             subtitle = item.subtitle,
@@ -1166,7 +1156,8 @@ fun DashboardScreen(
                             testTag = item.testTag,
                             onClick = { onNavigateToMenu(item.route) },
                             modifier = Modifier.fillMaxWidth(),
-                            isFullWidth = true
+                            isFullWidth = true,
+                            isLocked = !allowed
                         )
                     }
                 }
@@ -2456,35 +2447,49 @@ fun GlassMenuCard(
     testTag: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isFullWidth: Boolean = false
+    isFullWidth: Boolean = false,
+    isLocked: Boolean = false
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val isDark = false
-    val resolvedContainerBg = if (isDark) {
+    val resolvedContainerBg = if (isLocked) {
+        Color(0xFFF1F5F9)
+    } else if (isDark) {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
     } else {
         boxBgColor.copy(alpha = 0.85f)
     }
-    val resolvedBorderColor = if (isDark) {
+    val resolvedBorderColor = if (isLocked) {
+        Color(0xFFCBD5E1)
+    } else if (isDark) {
         MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
     } else {
         iconColor.copy(alpha = 0.15f)
     }
-    val resolvedTitleColor = if (isDark) {
+    val resolvedTitleColor = if (isLocked) {
+        Color(0xFF64748B)
+    } else if (isDark) {
         MaterialTheme.colorScheme.onSurface
     } else {
         iconColor
     }
-    val resolvedSubtitleColor = if (isDark) {
+    val resolvedSubtitleColor = if (isLocked) {
+        Color(0xFF94A3B8)
+    } else if (isDark) {
         MaterialTheme.colorScheme.onSurfaceVariant
     } else {
         Color(0xFF334155)
     }
-    val resolvedIconBg = if (isDark) {
+    val resolvedIconBg = if (isLocked) {
+        Color(0xFFE2E8F0)
+    } else if (isDark) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
     } else {
         Color.White
     }
-    val resolvedIconColor = if (isDark) {
+    val resolvedIconColor = if (isLocked) {
+        Color(0xFF94A3B8)
+    } else if (isDark) {
         MaterialTheme.colorScheme.primary
     } else {
         iconColor
@@ -2498,7 +2503,13 @@ fun GlassMenuCard(
             .then(if (isFullWidth) Modifier.height(88.dp) else Modifier.aspectRatio(1.35f))
             .background(resolvedContainerBg, RoundedCornerShape(24.dp))
             .border(1.dp, resolvedBorderColor, RoundedCornerShape(24.dp))
-            .clickable { onClick() }
+            .clickable {
+                if (isLocked) {
+                    Toast.makeText(context, "Fitur '$title' terkunci untuk akun Siswa", Toast.LENGTH_SHORT).show()
+                } else {
+                    onClick()
+                }
+            }
             .testTag(testTag)
     ) {
         if (isFullWidth) {
@@ -2525,19 +2536,32 @@ fun GlassMenuCard(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            fontSize = 16.sp,
-                            color = resolvedTitleColor
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                fontSize = 16.sp,
+                                color = resolvedTitleColor
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (isLocked) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Terkunci",
+                                tint = Color(0xFFEF4444),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = subtitle,
+                        text = if (isLocked) "Akses Terkunci (Siswa)" else subtitle,
                         fontSize = 12.sp,
                         color = resolvedSubtitleColor,
                         fontWeight = FontWeight.Medium,
@@ -2554,19 +2578,52 @@ fun GlassMenuCard(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.Start
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(resolvedIconBg)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = title,
-                        tint = resolvedIconColor,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(resolvedIconBg)
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = title,
+                            tint = resolvedIconColor,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    if (isLocked) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFFEE2E2))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = "Terkunci",
+                                    tint = Color(0xFFEF4444),
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text(
+                                    text = "Kunci",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFDC2626)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column {
@@ -2582,7 +2639,7 @@ fun GlassMenuCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = subtitle,
+                        text = if (isLocked) "Akses Terkunci" else subtitle,
                         fontSize = 11.sp,
                         color = resolvedSubtitleColor,
                         fontWeight = FontWeight.Medium,
@@ -2695,5 +2752,6 @@ data class DashboardMenuData(
     val iconColor: Color,
     val boxBgColor: Color,
     val testTag: String,
-    val route: String
+    val route: String,
+    val permissionKey: String = ""
 )

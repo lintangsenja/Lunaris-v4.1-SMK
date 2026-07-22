@@ -132,6 +132,11 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun isStudentPermissionAllowed(permissionKey: String): Boolean {
+        if (_userRole.value.contains("admin", ignoreCase = true)) return true
+        return _studentPermissions.value[permissionKey] == true
+    }
+
     fun updateStudentPermission(key: String, isAllowed: Boolean) {
         val updated = _studentPermissions.value.toMutableMap()
         updated[key] = isAllowed

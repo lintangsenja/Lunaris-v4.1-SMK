@@ -126,7 +126,7 @@ fun LaporanScreen(
             7 -> "laporan_pemeliharaan"
             else -> "laporan_ringkasan"
         }
-        return studentPermissions[key] == true || studentPermissions["laporan"] == true
+        return viewModel.isStudentPermissionAllowed(key)
     }
 
     var selectedTabState by remember { mutableStateOf(0) }
@@ -697,8 +697,8 @@ fun LaporanScreen(
                 }
 
                 // EXPORT CONTROL ROW
-                val canExportExcel = !isSiswa || studentPermissions["laporan_export_excel"] == true || studentPermissions["laporan_export"] == true || studentPermissions["laporan"] == true
-                val canPrintPdf = !isSiswa || studentPermissions["laporan_print_pdf"] == true || studentPermissions["laporan_export"] == true || studentPermissions["laporan"] == true
+                val canExportExcel = !isSiswa || viewModel.isStudentPermissionAllowed("laporan_export_excel")
+                val canPrintPdf = !isSiswa || viewModel.isStudentPermissionAllowed("laporan_print_pdf")
 
                 Row(
                     modifier = Modifier
