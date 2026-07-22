@@ -27,20 +27,23 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         // Pre-populate database Profile table with settings from SharedPreferences if empty
         viewModelScope.launch {
             val existing = dao.getProfile()
-            if (existing == null) {
-                val defaultName = settingsRepository.getDefaultOfficer().ifBlank { "Administrator" }
-                val defaultNip = settingsRepository.getOfficerNip().ifBlank { "-" }
+            val targetName = "Pipit Ella Fiantia, S.Kom."
+            val targetNip = "199903142025212025"
+
+            if (existing == null || existing.namaPetugas.isBlank() || existing.namaPetugas.contains("Kevin Ricky Utama", ignoreCase = true) || existing.nip.isBlank() || existing.nip == "19980419202511035") {
                 val defaultInstansi = settingsRepository.getInstansiName().ifBlank { "Gudang Utama Lunaris" }
                 val defaultLogo = settingsRepository.getInstansiLogoPath()
 
-                val initialProfile = ProfileEntity(
+                val updatedProfile = ProfileEntity(
                     id = 1,
-                    namaPetugas = defaultName,
-                    nip = defaultNip,
-                    namaInstansi = defaultInstansi,
-                    fotoUri = defaultLogo
+                    namaPetugas = targetName,
+                    nip = targetNip,
+                    namaInstansi = existing?.namaInstansi?.ifBlank { defaultInstansi } ?: defaultInstansi,
+                    fotoUri = existing?.fotoUri?.ifBlank { defaultLogo } ?: defaultLogo
                 )
-                dao.insertProfile(initialProfile)
+                dao.insertProfile(updatedProfile)
+                settingsRepository.setDefaultOfficer(targetName)
+                settingsRepository.setOfficerNip(targetNip)
             }
         }
     }

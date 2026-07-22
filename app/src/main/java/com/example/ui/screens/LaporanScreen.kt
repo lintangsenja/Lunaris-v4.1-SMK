@@ -109,7 +109,36 @@ fun LaporanScreen(
     val namaPetugasState by viewModel.defaultOfficer.collectAsState()
     val namaPetugas = namaPetugasState.ifBlank { "Administrator" }
 
+    val userRole by viewModel.userRole.collectAsState()
+    val studentPermissions by viewModel.studentPermissions.collectAsState()
+    val isSiswa = remember(userRole) { userRole.contains("siswa", ignoreCase = true) }
+
+    fun isReportTabAllowed(index: Int): Boolean {
+        if (!isSiswa) return true
+        val key = when(index) {
+            0 -> "laporan_ringkasan"
+            1 -> "laporan_alat"
+            2 -> "laporan_bahan"
+            3 -> "laporan_afkir"
+            4 -> "laporan_peminjaman"
+            5 -> "laporan_pengembalian"
+            6 -> "laporan_alat_rusak"
+            7 -> "laporan_pemeliharaan"
+            else -> "laporan_ringkasan"
+        }
+        return studentPermissions[key] == true || studentPermissions["laporan"] == true
+    }
+
     var selectedTabState by remember { mutableStateOf(0) }
+
+    LaunchedEffect(userRole, studentPermissions) {
+        if (isSiswa && !isReportTabAllowed(selectedTabState)) {
+            val nextAllowed = (0..7).firstOrNull { isReportTabAllowed(it) }
+            if (nextAllowed != null) {
+                selectedTabState = nextAllowed
+            }
+        }
+    }
     var isExporting by remember { mutableStateOf(false) }
 
     var showExportSuccessDialog by remember { mutableStateOf(false) }
@@ -522,17 +551,37 @@ fun LaporanScreen(
                             "🛠️ Pemeliharaan" to "laporan_tab_maintenance"
                         )
                         tabs.forEachIndexed { index, (title, tag) ->
+                            val allowed = isReportTabAllowed(index)
                             Tab(
                                 selected = selectedTabState == index,
-                                onClick = { selectedTabState = index },
+                                onClick = {
+                                    if (allowed) {
+                                        selectedTabState = index
+                                    } else {
+                                        Toast.makeText(context, "Sub-menu '$title' terkunci untuk akun Siswa", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
                                 selectedContentColor = selectedTabColor,
-                                unselectedContentColor = unselectedTabColor,
+                                unselectedContentColor = if (allowed) unselectedTabColor else Color.LightGray,
                                 text = { 
-                                    Text(
-                                        text = title, 
-                                        fontWeight = if (selectedTabState == index) FontWeight.Bold else FontWeight.Medium, 
-                                        fontSize = 15.sp
-                                    ) 
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        if (!allowed) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lock,
+                                                contentDescription = "Terkunci",
+                                                tint = Color(0xFFEF4444),
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                        }
+                                        Text(
+                                            text = title, 
+                                            fontWeight = if (selectedTabState == index) FontWeight.Bold else FontWeight.Medium, 
+                                            fontSize = 15.sp
+                                        ) 
+                                    }
                                 },
                                 modifier = Modifier.testTag(tag)
                             )
@@ -648,6 +697,9 @@ fun LaporanScreen(
                 }
 
                 // EXPORT CONTROL ROW
+                val canExportExcel = !isSiswa || studentPermissions["laporan_export_excel"] == true || studentPermissions["laporan_export"] == true || studentPermissions["laporan"] == true
+                val canPrintPdf = !isSiswa || studentPermissions["laporan_print_pdf"] == true || studentPermissions["laporan_export"] == true || studentPermissions["laporan"] == true
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -655,10 +707,16 @@ fun LaporanScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = { handleExport("CSV") },
+                        onClick = {
+                            if (canExportExcel) {
+                                handleExport("CSV")
+                            } else {
+                                Toast.makeText(context, "Fitur Ekspor CSV terkunci untuk akun Siswa", Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color(0xFFEDE9FE),
-                            contentColor = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else DeepPurpleText
+                            containerColor = if (canExportExcel) (if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color(0xFFEDE9FE)) else Color.LightGray,
+                            contentColor = if (canExportExcel) (if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else DeepPurpleText) else Color.Gray
                         ),
                         border = BorderStroke(
                             1.dp,
@@ -668,9 +726,9 @@ fun LaporanScreen(
                         modifier = Modifier.weight(1f).testTag("btn_export_csv_v")
                     ) {
                         Icon(
-                            Icons.Default.TableChart,
+                            if (canExportExcel) Icons.Default.TableChart else Icons.Default.Lock,
                             contentDescription = null,
-                            tint = if (isDark) MaterialTheme.colorScheme.primary else DeepPurpleText,
+                            tint = if (canExportExcel) (if (isDark) MaterialTheme.colorScheme.primary else DeepPurpleText) else Color.Gray,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -682,10 +740,16 @@ fun LaporanScreen(
                     }
 
                     Button(
-                        onClick = { handleExport("Excel") },
+                        onClick = {
+                            if (canExportExcel) {
+                                handleExport("Excel")
+                            } else {
+                                Toast.makeText(context, "Fitur Ekspor Excel terkunci untuk akun Siswa", Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color(0xFFEDE9FE),
-                            contentColor = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else DeepPurpleText
+                            containerColor = if (canExportExcel) (if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color(0xFFEDE9FE)) else Color.LightGray,
+                            contentColor = if (canExportExcel) (if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else DeepPurpleText) else Color.Gray
                         ),
                         border = BorderStroke(
                             1.dp,
@@ -695,9 +759,9 @@ fun LaporanScreen(
                         modifier = Modifier.weight(1f).testTag("btn_export_excel")
                     ) {
                         Icon(
-                            Icons.Default.Description,
+                            if (canExportExcel) Icons.Default.Description else Icons.Default.Lock,
                             contentDescription = null,
-                            tint = if (isDark) MaterialTheme.colorScheme.primary else DeepPurpleText,
+                            tint = if (canExportExcel) (if (isDark) MaterialTheme.colorScheme.primary else DeepPurpleText) else Color.Gray,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -709,16 +773,22 @@ fun LaporanScreen(
                     }
 
                     Button(
-                        onClick = { handleExport("PDF") },
+                        onClick = {
+                            if (canPrintPdf) {
+                                handleExport("PDF")
+                            } else {
+                                Toast.makeText(context, "Fitur Cetak PDF terkunci untuk akun Siswa", Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF7C3AED),
-                            contentColor = if (isDark) MaterialTheme.colorScheme.onPrimary else Color.White
+                            containerColor = if (canPrintPdf) (if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF7C3AED)) else Color.LightGray,
+                            contentColor = if (canPrintPdf) (if (isDark) MaterialTheme.colorScheme.onPrimary else Color.White) else Color.Gray
                         ),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f).testTag("btn_export_pdf")
                     ) {
                         Icon(
-                            Icons.Default.PictureAsPdf,
+                            if (canPrintPdf) Icons.Default.PictureAsPdf else Icons.Default.Lock,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )

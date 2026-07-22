@@ -14,7 +14,7 @@ android {
   compileSdk = 36
 
   defaultConfig {
-    applicationId = "com.lintang.lunaris"
+    applicationId = "com.ella.lunaris"
     minSdk = 24
     targetSdk = 36
     versionCode = 1

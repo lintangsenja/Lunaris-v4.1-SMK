@@ -66,7 +66,14 @@ fun DynamicLogo(
     val localBitmap = remember(activePath) {
         if (!activePath.isNullOrEmpty()) {
             try {
-                if (activePath.startsWith("content://")) {
+                if (activePath.contains("base64,")) {
+                    val base64Data = activePath.substringAfter("base64,")
+                    val decodedBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
+                    BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)?.asImageBitmap()
+                } else if (activePath.length > 100 && !activePath.startsWith("http") && !activePath.startsWith("content:") && !activePath.startsWith("file:") && !activePath.startsWith("/")) {
+                    val decodedBytes = android.util.Base64.decode(activePath, android.util.Base64.DEFAULT)
+                    BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)?.asImageBitmap()
+                } else if (activePath.startsWith("content://")) {
                     val uri = Uri.parse(activePath)
                     val inputStream = context.contentResolver.openInputStream(uri)
                     BitmapFactory.decodeStream(inputStream)?.asImageBitmap()

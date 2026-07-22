@@ -69,12 +69,12 @@ class SettingsRepository(private val context: Context) {
                 context.dataStore.edit { preferences ->
                     preferences[IS_FIRST_LAUNCH] = false
                     preferences[INSTANSI_NAME_KEY] = "Pradipta Graha Digital"
-                    preferences[OFFICER_NAME_KEY] = "Kevin Ricky Utama, S.Kom."
-                    preferences[OFFICER_NIP_KEY] = "19980419202511035"
+                    preferences[OFFICER_NAME_KEY] = "Pipit Ella Fiantia, S.Kom."
+                    preferences[OFFICER_NIP_KEY] = "199903142025212025"
                 }
                 setInstansiName("Pradipta Graha Digital")
-                setDefaultOfficer("Kevin Ricky Utama, S.Kom.")
-                setOfficerNip("19980419202511035")
+                setDefaultOfficer("Pipit Ella Fiantia, S.Kom.")
+                setOfficerNip("199903142025212025")
             }
         }
     }
@@ -206,7 +206,8 @@ class SettingsRepository(private val context: Context) {
     }
 
     fun getDefaultOfficer(): String {
-        return prefs.getString(KEY_DEFAULT_OFFICER, "") ?: ""
+        val valSaved = prefs.getString(KEY_DEFAULT_OFFICER, "Pipit Ella Fiantia, S.Kom.") ?: "Pipit Ella Fiantia, S.Kom."
+        return if (valSaved.isBlank() || valSaved.contains("Kevin Ricky Utama", ignoreCase = true)) "Pipit Ella Fiantia, S.Kom." else valSaved
     }
 
     fun setDefaultOfficer(officer: String) {
@@ -219,7 +220,8 @@ class SettingsRepository(private val context: Context) {
     }
 
     fun getOfficerNip(): String {
-        return prefs.getString(KEY_OFFICER_NIP, "") ?: ""
+        val valSaved = prefs.getString(KEY_OFFICER_NIP, "199903142025212025") ?: "199903142025212025"
+        return if (valSaved.isBlank() || valSaved == "19980419202511035") "199903142025212025" else valSaved
     }
 
     fun setOfficerNip(nip: String) {

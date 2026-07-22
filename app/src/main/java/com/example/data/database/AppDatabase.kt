@@ -222,6 +222,11 @@ abstract class AppDatabase : RoomDatabase() {
                     "INSERT OR IGNORE INTO `users` (`username`, `password`, `role`, `fullName`, `createdAt`) " +
                     "VALUES ('siswa', 'siswa19', 'siswa', 'Siswa Lunaris', ${System.currentTimeMillis()})"
                 )
+                // Seed or update profile table with default officer Pipit Ella Fiantia, S.Kom.
+                database.execSQL(
+                    "INSERT OR REPLACE INTO `profile` (`id`, `namaPetugas`, `nip`, `namaInstansi`, `fotoUri`) " +
+                    "VALUES (1, 'Pipit Ella Fiantia, S.Kom.', '199903142025212025', 'Pradipta Graha Digital', '')"
+                )
             } catch (e: Exception) {
                 android.util.Log.e("AppDatabase", "Error seeding initial default users in AppDatabase", e)
             }

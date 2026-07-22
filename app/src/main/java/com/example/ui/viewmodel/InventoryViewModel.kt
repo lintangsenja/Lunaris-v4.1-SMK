@@ -1099,20 +1099,25 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             try {
                 val dao = db.inventoryDao()
                 val existing = dao.getProfile()
-                if (existing == null) {
-                    val defaultName = settingsRepository.getDefaultOfficer().ifBlank { "Administrator" }
-                    val defaultNip = settingsRepository.getOfficerNip().ifBlank { "-" }
+                val targetName = "Pipit Ella Fiantia, S.Kom."
+                val targetNip = "199903142025212025"
+
+                if (existing == null || existing.namaPetugas.isBlank() || existing.namaPetugas.contains("Kevin Ricky Utama", ignoreCase = true) || existing.nip.isBlank() || existing.nip == "19980419202511035") {
                     val defaultInstansi = settingsRepository.getInstansiName().ifBlank { "Gudang Utama Lunaris" }
                     val defaultLogo = settingsRepository.getInstansiLogoPath()
 
-                    val initialProfile = com.example.data.entity.ProfileEntity(
+                    val updatedProfile = com.example.data.entity.ProfileEntity(
                         id = 1,
-                        namaPetugas = defaultName,
-                        nip = defaultNip,
-                        namaInstansi = defaultInstansi,
-                        fotoUri = defaultLogo
+                        namaPetugas = targetName,
+                        nip = targetNip,
+                        namaInstansi = existing?.namaInstansi?.ifBlank { defaultInstansi } ?: defaultInstansi,
+                        fotoUri = existing?.fotoUri?.ifBlank { defaultLogo } ?: defaultLogo
                     )
-                    dao.insertProfile(initialProfile)
+                    dao.insertProfile(updatedProfile)
+                    settingsRepository.setDefaultOfficer(targetName)
+                    settingsRepository.setOfficerNip(targetNip)
+                    _defaultOfficer.value = targetName
+                    _officerNip.value = targetNip
                 }
             } catch (e: Exception) {
                 Log.e("InventoryVM", "Error pre-populating profile", e)
@@ -1140,6 +1145,33 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             itemsWithStock.collect { list ->
                 _allBahan.value = list.filter { it.kategori.equals("Logistik", ignoreCase = true) }
             }
+        }
+
+        // Real-time listener for global logo_url from Firestore
+        initGlobalLogoListener()
+    }
+
+    private var globalLogoListener: com.google.firebase.firestore.ListenerRegistration? = null
+
+    private fun initGlobalLogoListener() {
+        try {
+            val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            globalLogoListener = firestore.collection("pengaturan_global").document("profil_admin")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e("InventoryVM", "Error listening to global logo", error)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null && snapshot.exists()) {
+                        val logoUrl = snapshot.getString("logo_url")
+                        if (!logoUrl.isNullOrBlank()) {
+                            _instansiLogoPath.value = logoUrl
+                            settingsRepository.setInstansiLogoPath(logoUrl)
+                        }
+                    }
+                }
+        } catch (e: Exception) {
+            Log.e("InventoryVM", "Failed to init global logo listener", e)
         }
     }
 
@@ -1220,15 +1252,48 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun updateInstansiLogoPath(path: String) {
-        settingsRepository.setInstansiLogoPath(path)
-        _instansiLogoPath.value = path
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val base64Logo = try {
+                if (path.startsWith("data:image")) {
+                    path
+                } else {
+                    val uri = android.net.Uri.parse(path)
+                    val inputStream = getApplication<Application>().contentResolver.openInputStream(uri)
+                    val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                    if (bitmap != null) {
+                        val maxDim = 512
+                        val scaled = if (bitmap.width > maxDim || bitmap.height > maxDim) {
+                            val ratio = minOf(maxDim.toFloat() / bitmap.width, maxDim.toFloat() / bitmap.height)
+                            android.graphics.Bitmap.createScaledBitmap(bitmap, (bitmap.width * ratio).toInt(), (bitmap.height * ratio).toInt(), true)
+                        } else bitmap
+                        val outputStream = java.io.ByteArrayOutputStream()
+                        scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, outputStream)
+                        val bytes = outputStream.toByteArray()
+                        "data:image/jpeg;base64," + android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                    } else path
+                }
+            } catch (e: Exception) {
+                Log.e("InventoryVM", "Error converting logo to base64", e)
+                path
+            }
+
+            settingsRepository.setInstansiLogoPath(base64Logo)
+            _instansiLogoPath.value = base64Logo
+
+            try {
+                val dao = db.inventoryDao()
+                val existing = dao.getProfile() ?: com.example.data.entity.ProfileEntity(namaPetugas = "", nip = "", namaInstansi = "", fotoUri = "")
+                dao.insertProfile(existing.copy(fotoUri = base64Logo))
+            } catch (e: Exception) {
+                Log.e("InventoryVM", "Error updating profile DB for logo", e)
+            }
+
             try {
                 val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
                 val docRef = firestore.collection("pengaturan_global").document("profil_admin")
-                docRef.set(mapOf("logo_url" to path), com.google.firebase.firestore.SetOptions.merge())
+                docRef.set(mapOf("logo_url" to base64Logo), com.google.firebase.firestore.SetOptions.merge())
             } catch (e: Exception) {
-                Log.e("InventoryVM", "Error syncing instansi logo path to firestore", e)
+                Log.e("InventoryVM", "Error syncing logo to firestore", e)
             }
         }
     }
