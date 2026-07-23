@@ -1027,7 +1027,7 @@ fun DashboardScreen(
                 DashboardMenuData("Bahan Afkir", "Bahan rusak / kedaluwarsa", Icons.Default.DeleteSweep, Color(0xFFEA580C), Color(0xFFFFEDD5), "menu_bahan_afkir", "Bahan Afkir", "bahan_afkir"),
                 DashboardMenuData("Alat Rusak", "Kelola & lapor alat rusak", Icons.Default.Warning, Color(0xFFEF4444), Color(0xFFFFECEF), "menu_alat_rusak", "Alat Rusak", "alat_rusak"),
                 DashboardMenuData("Pemeliharaan", "Servis & pemeliharaan alat", Icons.Default.Build, Color(0xFF2563EB), Color(0xFFEFF6FF), "menu_pemeliharaan", "Pemeliharaan", "pemeliharaan")
-            )
+            ).filter { isMenuAllowedForSiswa(it.permissionKey) }
         }
 
         val sirkulasiMenus = remember(userRole, studentPermissions) {
@@ -1036,13 +1036,13 @@ fun DashboardScreen(
                 DashboardMenuData("Pengembalian Alat", "Input barang kembali", Icons.Default.AssignmentReturn, Color(0xFF4F46E5), Color(0xFFE0E7FF), "menu_pengembalian", "Pengembalian", "pengembalian"),
                 DashboardMenuData("Kondisi Alat", "Cek kelayakan alat", Icons.Default.Info, Color(0xFFE11D48), Color(0xFFFFE4E6), "menu_kondisi_alat", "Kondisi Alat", "kondisi_alat"),
                 DashboardMenuData("Log Transaksi", "Riwayat aktivitas", Icons.Default.CloudSync, Color(0xFF0D9488), Color(0xFFCCFBF1), "menu_log_transaksi", "Log Transaksi", "log_transaksi")
-            )
+            ).filter { isMenuAllowedForSiswa(it.permissionKey) }
         }
 
         val analisisMenus = remember(userRole, studentPermissions) {
             listOf(
                 DashboardMenuData("Laporan", "Unduh laporan & rekapan", Icons.Default.Assessment, Color(0xFF06B6D4), Color(0xFFECFEFF), "menu_laporan", "Laporan", "laporan")
-            )
+            ).filter { isMenuAllowedForSiswa(it.permissionKey) }
         }
 
         // 1. KELOMPOK OPERASIONAL (EXPANDABLE)
@@ -1066,7 +1066,6 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             rowItems.forEach { item ->
-                                val allowed = isMenuAllowedForSiswa(item.permissionKey)
                                 GlassMenuCard(
                                     title = item.title,
                                     subtitle = item.subtitle,
@@ -1075,9 +1074,11 @@ fun DashboardScreen(
                                     boxBgColor = item.boxBgColor,
                                     testTag = item.testTag,
                                     onClick = { onNavigateToMenu(item.route) },
-                                    modifier = Modifier.weight(1f),
-                                    isLocked = !allowed
+                                    modifier = Modifier.weight(1f)
                                 )
+                            }
+                            if (rowItems.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                     }
@@ -1109,7 +1110,6 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             rowItems.forEach { item ->
-                                val allowed = isMenuAllowedForSiswa(item.permissionKey)
                                 GlassMenuCard(
                                     title = item.title,
                                     subtitle = item.subtitle,
@@ -1118,9 +1118,11 @@ fun DashboardScreen(
                                     boxBgColor = item.boxBgColor,
                                     testTag = item.testTag,
                                     onClick = { onNavigateToMenu(item.route) },
-                                    modifier = Modifier.weight(1f),
-                                    isLocked = !allowed
+                                    modifier = Modifier.weight(1f)
                                 )
+                            }
+                            if (rowItems.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                     }
@@ -1146,7 +1148,6 @@ fun DashboardScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     analisisMenus.forEach { item ->
-                        val allowed = isMenuAllowedForSiswa(item.permissionKey)
                         GlassMenuCard(
                             title = item.title,
                             subtitle = item.subtitle,
@@ -1156,8 +1157,7 @@ fun DashboardScreen(
                             testTag = item.testTag,
                             onClick = { onNavigateToMenu(item.route) },
                             modifier = Modifier.fillMaxWidth(),
-                            isFullWidth = true,
-                            isLocked = !allowed
+                            isFullWidth = true
                         )
                     }
                 }
@@ -2447,49 +2447,35 @@ fun GlassMenuCard(
     testTag: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isFullWidth: Boolean = false,
-    isLocked: Boolean = false
+    isFullWidth: Boolean = false
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
     val isDark = false
-    val resolvedContainerBg = if (isLocked) {
-        Color(0xFFF1F5F9)
-    } else if (isDark) {
+    val resolvedContainerBg = if (isDark) {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
     } else {
         boxBgColor.copy(alpha = 0.85f)
     }
-    val resolvedBorderColor = if (isLocked) {
-        Color(0xFFCBD5E1)
-    } else if (isDark) {
+    val resolvedBorderColor = if (isDark) {
         MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
     } else {
         iconColor.copy(alpha = 0.15f)
     }
-    val resolvedTitleColor = if (isLocked) {
-        Color(0xFF64748B)
-    } else if (isDark) {
+    val resolvedTitleColor = if (isDark) {
         MaterialTheme.colorScheme.onSurface
     } else {
         iconColor
     }
-    val resolvedSubtitleColor = if (isLocked) {
-        Color(0xFF94A3B8)
-    } else if (isDark) {
+    val resolvedSubtitleColor = if (isDark) {
         MaterialTheme.colorScheme.onSurfaceVariant
     } else {
         Color(0xFF334155)
     }
-    val resolvedIconBg = if (isLocked) {
-        Color(0xFFE2E8F0)
-    } else if (isDark) {
+    val resolvedIconBg = if (isDark) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
     } else {
         Color.White
     }
-    val resolvedIconColor = if (isLocked) {
-        Color(0xFF94A3B8)
-    } else if (isDark) {
+    val resolvedIconColor = if (isDark) {
         MaterialTheme.colorScheme.primary
     } else {
         iconColor
@@ -2503,13 +2489,7 @@ fun GlassMenuCard(
             .then(if (isFullWidth) Modifier.height(88.dp) else Modifier.aspectRatio(1.35f))
             .background(resolvedContainerBg, RoundedCornerShape(24.dp))
             .border(1.dp, resolvedBorderColor, RoundedCornerShape(24.dp))
-            .clickable {
-                if (isLocked) {
-                    Toast.makeText(context, "Fitur '$title' terkunci untuk akun Siswa", Toast.LENGTH_SHORT).show()
-                } else {
-                    onClick()
-                }
-            }
+            .clickable { onClick() }
             .testTag(testTag)
     ) {
         if (isFullWidth) {
@@ -2536,32 +2516,19 @@ fun GlassMenuCard(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Black,
-                                fontSize = 16.sp,
-                                color = resolvedTitleColor
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        if (isLocked) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Terkunci",
-                                tint = Color(0xFFEF4444),
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            fontSize = 16.sp,
+                            color = resolvedTitleColor
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = if (isLocked) "Akses Terkunci (Siswa)" else subtitle,
+                        text = subtitle,
                         fontSize = 12.sp,
                         color = resolvedSubtitleColor,
                         fontWeight = FontWeight.Medium,
@@ -2578,52 +2545,19 @@ fun GlassMenuCard(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.Start
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(resolvedIconBg)
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(resolvedIconBg)
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = title,
-                            tint = resolvedIconColor,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-
-                    if (isLocked) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFFFEE2E2))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = "Terkunci",
-                                    tint = Color(0xFFEF4444),
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Text(
-                                    text = "Kunci",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFDC2626)
-                                )
-                            }
-                        }
-                    }
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = resolvedIconColor,
+                        modifier = Modifier.size(22.dp)
+                    )
                 }
 
                 Column {
@@ -2639,7 +2573,7 @@ fun GlassMenuCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = if (isLocked) "Akses Terkunci" else subtitle,
+                        text = subtitle,
                         fontSize = 11.sp,
                         color = resolvedSubtitleColor,
                         fontWeight = FontWeight.Medium,
